@@ -4,6 +4,8 @@ import "./StreamityCrowdsale.sol";
 
 contract StreamityContract is ERC20Extending, StreamityCrowdsale
 {
+    uint public weisRaised;  // how many weis was raised on crowdsale
+
     function StreamityContract() public TokenERC20(130000000, "Streamity", "STM") {} //change before send !!!
 
     /**
@@ -29,5 +31,7 @@ contract StreamityContract is ERC20Extending, StreamityCrowdsale
         }
 
         sell(msg.sender, msg.value);
+        weisRaised = weisRaised.add(msg.value);
+
     }
 }
