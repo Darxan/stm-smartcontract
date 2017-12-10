@@ -1,7 +1,7 @@
 1) (Critical) The function "sell" does not allow selling the token for less than 1 ether due to incorrect recording of the operations.
 2) (Minor) The SafeMath library is connected, but not used everywhere.
 3) (Note) A contract owner can change the cost of selling a token by contract.
-4) (Slightly) The crowdSaleStatus function returns the string value of the sale status, in most cases it is optimal to encode the encoded numerical value for saving gas.
+4) (Minor) The crowdSaleStatus function returns the string value of the sale status, in most cases it is optimal to encode the encoded numerical value for saving gas.
 5) (Note) The function "sell" is responsible for sending tokens to the specified address, the initial number of tokens is transferred by the function parameter, then according to the current sales period, the count of tokens calculated with additional bonus, and sent to the address specified by the parameter.
 6) (Note) Bonus tokens are provided only for the first, second and third period of the tokensale. On the first day of the second period an additional bonus is provided: its value in the case of equality 0 is increased to 20% of the number of sent tokens.
 7) (Average) Each sale phase starts with the call to the startCrowd function by the contract owner only, the previous stage ends either after the number of days specified in the _endDate parameter of the startCrowd function, or the next time it is called startCrowd.
