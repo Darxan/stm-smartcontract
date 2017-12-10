@@ -1,0 +1,57 @@
+1) (Important) In the function responsible for receiving ethers, a minimum transaction is 0.1 ethers, but when trying to send a ethers for an amount less than 1, there will be an error in the "sell" function.
+2) (Not critical) I recommend adding a public variable to the contract, which shows how many all the ethers have collected the contract. This variable will allow you to track how much all the money collected through the contract and display this information in dapp. (added).
+
+// EW Ok
+pragma solidity ^0.4.18;
+// EW Ok
+import "./ERC20Extending.sol";
+// EW Ok
+import "./StreamityCrowdsale.sol";
+// EW Ok
+contract StreamityContract is ERC20Extending, StreamityCrowdsale
+{
+    // EW Ok
+    uint public weisRaised;  // how many weis was raised on crowdsale
+
+    // EW Ok
+    function StreamityContract() public TokenERC20(130000000, "Streamity", "STM") {} //change before send !!!
+
+    /**
+    * Function payments handler
+    *
+    */
+    // EW Ok
+    function () public payable
+    {
+        // EW Ok
+        assert(msg.value >= 1 ether / 10);
+        // EW Ok
+        require(now >= ICO.startDate);
+
+        // EW Ok
+        if (now > ICO.endDate) {
+          // EW Ok
+          pauseInternal();
+          // EW Ok
+          CrowdSaleFinished(crowdSaleStatus());
+        }
+        // EW Ok
+        if (0 != startIcoDate){
+            // EW Ok
+            if (now < startIcoDate) {
+                // EW Ok
+                revert();
+              // EW Ok  
+            } else {
+                // EW Ok
+                startIcoDate = 0;
+            }
+        }
+
+        // EW Ok
+        sell(msg.sender, msg.value);
+        // EW Ok
+        weisRaised = weisRaised.add(msg.value);
+
+    }
+}
