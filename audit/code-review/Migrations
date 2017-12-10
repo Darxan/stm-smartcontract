@@ -1,0 +1,42 @@
+//EW The Migrations contract is not related to other contracts
+
+// EW Ok
+pragma solidity ^0.4.18;
+
+// EW Ok
+contract Migrations
+{
+  // EW Ok
+  address public owner;
+  // A function with the signature `last_completed_migration()`, returning a uint, is required.
+  // EW Ok
+  uint public last_completed_migration;
+  // EW Ok
+  modifier restricted() {
+    // EW Ok
+    if (msg.sender == owner)
+    // EW Ok
+		_;
+  }
+
+  // EW Ok
+  function Migrations() public {
+    // EW Ok
+    owner = msg.sender;
+  }
+
+  // A function with the signature `setCompleted(uint)` is required.
+  // EW Ok
+  function setCompleted(uint completed) public restricted {
+    // EW Ok
+    last_completed_migration = completed;
+  }
+
+  // EW Ok
+  function upgrade(address new_address) public restricted {
+    // EW Ok
+    Migrations upgraded = Migrations(new_address);
+    // EW Ok
+    upgraded.setCompleted(last_completed_migration);
+  }
+}
