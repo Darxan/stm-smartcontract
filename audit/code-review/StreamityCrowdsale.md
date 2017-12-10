@@ -1,0 +1,204 @@
+1) (Critical) The function "sell" does not allow selling the token for less than 1 ether due to incorrect recording of the operations.
+2) (Minor) The SafeMath library is connected, but not used everywhere.
+3) (Note) A contract owner can change the cost of selling a token by contract.
+4) (Slightly) The crowdSaleStatus function returns the string value of the sale status, in most cases it is optimal to encode the encoded numerical value for saving gas.
+5) (Note) The function "sell" is responsible for sending tokens to the specified address, the initial number of tokens is transferred by the function parameter, then according to the current sales period, the count of tokens calculated with additional bonus, and sent to the address specified by the parameter.
+6) (Note) Bonus tokens are provided only for the first, second and third period of the tokensale. On the first day of the second period an additional bonus is provided: its value in the case of equality 0 is increased to 20% of the number of sent tokens.
+7) (Average) Each sale phase starts with the call to the startCrowd function by the contract owner only, the previous stage ends either after the number of days specified in the _endDate parameter of the startCrowd function, or the next time it is called startCrowd.
+
+// EW Ok
+pragma solidity ^0.4.18;
+// EW Ok
+import "./MathLib.sol";
+// EW Ok
+import "./Pauseble.sol";
+
+// EW Ok
+contract StreamityCrowdsale is Pauseble
+{
+    // EW Ok
+    using SafeMath for uint;
+
+    // EW Ok
+    uint public stage = 0;
+
+    // EW Ok
+    event CrowdSaleFinished(string info);
+
+    // EW Ok
+    struct Ico {
+        // EW Ok
+        uint256 tokens; // Tokens in crowdsale
+        // EW Ok
+        uint startDate; // Date when crowsale will be starting, after its starting that property will be the 0
+        // EW Ok
+        uint endDate; // Date when crowdsale will be stop
+        // EW Ok
+        uint8 discount; // Discount
+        // EW Ok
+        uint8 discountFirstDayICO; // Discount. Only for first stage ico
+    }
+
+    // EW Ok
+    Ico public ICO;
+
+    /**
+    * Expanding of the functionality
+    *
+    * @param _numerator - Numerator - value (10000)
+    * @param _denominator - Denominator - value (10000)
+    *
+    * example: price 1000 tokens by 1 ether = changeRate(1, 1000)
+    */
+    // EW Ok
+    function changeRate(uint256 _numerator, uint256 _denominator) public onlyOwner
+        returns (bool success)
+    {
+        // EW Ok
+        if (_numerator == 0) _numerator = 1;
+        // EW Ok
+        if (_denominator == 0) _denominator = 1;
+
+        // EW Ok
+        buyPrice = (_numerator * 1 * DEC) / _denominator;
+
+        // EW Ok
+        return true;
+    }
+
+    /*
+    * Function show in contract what is now
+    *
+    */
+    // EW Ok
+    function crowdSaleStatus() internal constant
+        returns (string)
+    {
+        // EW Ok
+        if (1 == stage) {
+            // EW Ok
+            return "Pre-ICO";
+        // EW Ok    
+        } else if(2 == stage) {
+            // EW Ok
+            return "ICO first stage";
+        // EW Ok    
+        } else if (3 == stage) {
+            // EW Ok
+            return "ICO second stage";
+        // EW Ok    
+        } else if (4 >= stage) {
+            // EW Ok
+            return "feature stage";
+        }
+
+        // EW Ok
+        return "there is no stage at present";
+    }
+
+    /*
+    * Function for selling tokens in crowd time.
+    *
+    */
+    // EW Ok
+    function sell(address _investor, uint256 amount) internal
+    {
+        // EW - (!Important) if the value of the variable amount is less than 10 ** 18, the code will not work, it is necessary to write: uint256 _amount = amount.mul(DEC).div(buyPrice);
+        uint256 _amount = (amount / buyPrice) * DEC;
+        // EW Ok - redundant code, can write: if (1 == stage || 3==stage) ...
+        if (1 == stage) {
+            // EW Ok
+            _amount = _amount.add(withDiscount(_amount, ICO.discount));
+        }
+        // EW Ok
+        else if (2 == stage)
+        {   
+            // EW Ok
+            if (now <= ICO.startDate + 1 days)
+            {
+                  // EW Ok
+                  if (0 == ICO.discountFirstDayICO) {
+                      // EW Ok
+                      ICO.discountFirstDayICO = 20;
+                  }
+
+                  // EW Ok  
+                  _amount = _amount.add(withDiscount(_amount, ICO.discountFirstDayICO));
+            // EW Ok 
+            } else {
+                // EW Ok 
+                _amount = _amount.add(withDiscount(_amount, ICO.discount));
+            }
+          // EW Ok   
+        } else if (3 == stage) {
+            // EW Ok 
+            _amount = _amount.add(withDiscount(_amount, ICO.discount));
+        }
+        // EW Ok
+        if (ICO.tokens < _amount)
+        {   
+            // EW Ok
+            CrowdSaleFinished(crowdSaleStatus());
+            // EW Ok
+            pauseInternal();
+            // EW Ok
+            revert();
+        }
+
+        // EW Ok
+        ICO.tokens -= _amount;
+        // EW Ok
+        avaliableSupply -= _amount;
+        // EW Ok
+        _transfer(this, _investor, _amount);
+    }
+
+    /*
+    * Function for start crowdsale (any)
+    *
+    * @param _tokens - How much tokens will have the crowdsale - amount humanlike value (10000)
+    * @param _startDate - When crowdsale will be start - unix timestamp (1512231703 )
+    * @param _endDate - When crowdsale will be end - humanlike value (7) same as 7 days
+    * @param _discount - Discount for the crowd - humanlive value (7) same as 7 %
+    * @param _discount - Discount for the crowds first day - humanlive value (7) same as 7 %
+    */
+    // EW Ok
+    function startCrowd(uint256 _tokens, uint _startDate, uint _endDate, uint8 _discount, uint8 _discountFirstDayICO) public onlyOwner
+    {
+        // EW Ok
+        require(_tokens * DEC <= avaliableSupply);  // require to set correct tokens value for crowd
+        // EW Ok
+        startIcoDate = _startDate;
+        // EW Ok
+        ICO = Ico (_tokens * DEC, _startDate, _startDate + _endDate * 1 days , _discount, _discountFirstDayICO);
+        // EW Ok
+        stage += 1;
+        // EW Ok
+        unpause();
+    }
+
+    /**
+    * Function for web3js, should be call when somebody will buy tokens from website. This function only delegator.
+    *
+    * @param _investor - address of investor (who payed)
+    * @param _amount - ethereum
+    */
+    // EW Ok
+    function transferWeb3js(address _investor, uint256 _amount) external onlyOwner
+    {
+        // EW Ok
+        sell(_investor, _amount);
+    }
+
+    /**
+    * Function for adding discount
+    *
+    */
+    // EW Ok
+    function withDiscount(uint256 _amount, uint _percent) internal pure
+        returns (uint256)
+    {
+        // EW Ok
+        return ((_amount * _percent) / 100);
+    }
+}
