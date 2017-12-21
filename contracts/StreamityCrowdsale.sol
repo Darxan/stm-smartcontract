@@ -63,7 +63,7 @@ contract StreamityCrowdsale is Pauseble
     * Function for selling tokens in crowd time.
     *
     */
-    function sell(address _investor, uint256 amount) internal
+    function sell(address _investor, uint256 amount) internal whenNotPaused
     {
         uint256 _amount = (amount / buyPrice) * DEC;
 
