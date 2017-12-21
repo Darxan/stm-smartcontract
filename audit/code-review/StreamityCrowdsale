@@ -100,7 +100,7 @@ contract StreamityCrowdsale is Pauseble
     * Function for selling tokens in crowd time.
     *
     */
-    // EW Ok
+    // EW whenNotPaused - for pausable receiving money
     function sell(address _investor, uint256 amount) internal
     {
         // EW - (!Important) if the value of the variable amount is less than 10 ** 18, the code will not work, it is necessary to write: uint256 _amount = amount.mul(DEC).div(buyPrice);
