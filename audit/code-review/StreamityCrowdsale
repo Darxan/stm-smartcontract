@@ -137,11 +137,11 @@ contract StreamityCrowdsale is Pauseble
         // EW Ok
         if (ICO.tokens < _amount)
         {   
-            // EW Ok
+            // EW Ok - not necessary
             CrowdSaleFinished(crowdSaleStatus());
-            // EW Ok
+            // EW Ok - not necessary
             pauseInternal();
-            // EW Ok
+            // EW - revert cancels the previous state
             revert();
         }
 
