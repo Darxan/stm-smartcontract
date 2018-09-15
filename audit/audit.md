@@ -1,6 +1,5 @@
 # Streamity crowdsale smart contracts audit.
 
-Status - in work.
 
 ## General
 
